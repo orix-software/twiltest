@@ -9,11 +9,18 @@ SET ORIGIN_PATH=%CD%
 
 %OSDK%\bin\xa teletest21.asm -o teletest21_16.rom
 
+%OSDK%\bin\xa teletest30.asm -o teletest30.rom
 
+
+copy empty_16KB.rom /b + empty_16KB.rom /b + orix10_6502.rom + teletest30.rom /b cardridge_test.rom
 
 
 IF "%1"=="NORUN" GOTO End
 
+copy teletest30.rom %ORICUTRON%\roms\teletest30.rom
+cd %ORICUTRON%
+OricutronV4 -mt -d teledisks\stratsed.dsk
+cd %ORIGIN_PATH%
 :End
 
 
