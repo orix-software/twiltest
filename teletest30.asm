@@ -1,7 +1,9 @@
 
-#define start_screen $bb80+40+40
+#include "../oric-common/include/asm/via6522_2.h"
 
-#define status_line $bb80+40
+#define start_screen $bb80+40+40+40
+
+#define status_line $bb80+40+40
 
 *=$c000
 #define RES  $00
@@ -10,14 +12,27 @@
 #define POS $04
 
 start_teletest
-
+	sei
+	CLD
+	LDX #$FF
+	TXS ; init stack
+	
 	lda #<start_screen
 	sta POS
 
 	lda #>start_screen
 	sta POS+1
+
+	; init VIA2
+	lda #$07
+	sta $323
 	
+	lda #32
 	jsr _clean_screen
+	
+	lda #27 ; 50hz 
+	jsr _clean_screen
+	
 	jsr _copy_charset
 	
 
@@ -30,21 +45,33 @@ start_teletest
 	ldy #>str_test_switch
 	jsr _print
 	
+	lda #"B"
+	sta status_line+34-40
+	lda #"A"
+	sta status_line+35-40
+	lda #"N"
+	sta status_line+36-40
+	lda #"K"
+	sta status_line+37-40
+	
+	jsr _print_bank
+	jsr _wait
+	
 	jsr _read_bank
+	
+	lda #<str_test_joysticks
+	ldy #>str_test_joysticks
+	jsr _print
+	
+
+	
 loopme
 	jmp loopme
 	rts
 
 _read_bank
 .(
-	lda #"B"
-	sta $bb80+34
-	lda #"A"
-	sta $bb80+35
-	lda #"N"
-	sta $bb80+36
-	lda #"K"
-	sta $bb80+37
+
 
 	
 	ldx #0
@@ -79,15 +106,17 @@ switch_code
 	ldy #0
 loop
 	lda (RES),y
+	beq skip
 	sta (RESB),y
 	iny
-	cpy #10
+
 	bne loop
-	
+skip	
 	lda $321
+	and #%00000111
 	clc
-	adc #56
-	sta $bb80+39
+	adc #48
+	sta status_line+39-40
 	
 	ldy #0
 	
@@ -122,34 +151,57 @@ loop2
 	sta $321
 	
 	lda $321
+	and #%00000111
 	clc
-	adc #56
-	sta $bb80+39	
+	adc #48
+	sta status_line+39-40
 	;jsr _print_bank
-loop3
-	beq loop3
+
 	rts
+.)
+
+_display_current_bank
+.(
+
 .)
 
 _wait
 .(
+	ldy #0
 	ldx #0
 loop	
-	ldy #0
-	iny
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop	
+	inx
 	bne loop
 	iny
 	bne loop
 	rts
-
 .)
 
 _print_bank:
 
 	lda $321
+	and #%00000111
 	clc
-	adc #56
-	sta $bb80+39
+	adc #48
+	sta status_line+39-40
 	rts
 	
 _print
@@ -184,17 +236,20 @@ str_teletest
 .asc 1,"TELETEST 3.0",$13,0
 str_test_switch
 .asc "TESTING ROM SWITCH",$13,0
+str_test_joysticks
+.asc "TESTING JOYSTICKS",$13,0	
 	
 _clean_screen
 .(
-	ldx #0
-	lda #<start_screen
-	sta RES
 	
-	lda #>start_screen
-	sta RES+1
+	ldy #<$bb80
+	sty RES
+	
+	ldy #>$bb80
+	sty RES+1
+	
 	ldy #0
-	lda #32
+	
 	
 	ldx #4
 loop

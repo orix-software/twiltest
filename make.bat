@@ -12,7 +12,7 @@ SET ORIGIN_PATH=%CD%
 %OSDK%\bin\xa teletest30.asm -o teletest30.rom
 
 
-copy empty_16KB.rom /b + empty_16KB.rom /b + orix10_6502.rom + teletest30.rom /b cardridge_test.rom
+copy teletest30.rom /b + teletest30.rom /b + orix10_6502.rom + teletest30.rom /b cardridge_test.rom
 
 
 IF "%1"=="NORUN" GOTO End
